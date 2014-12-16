@@ -25,6 +25,20 @@
 			<string>Enable Tweak</string>
 		</dict>
 		<dict>
+			<key>PostNotification</key>
+			<string>com.joshdoctors.circulate/settingschanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.joshdoctors.circulate</string>
+			<key>key</key>
+			<string>enable24hr</string>
+			<key>label</key>
+			<string>Enable 24Hr Clock</string>
+		</dict>
+		<dict>
 			<key>cell</key>
 			<string>PSLinkCell</string>
 			<key>detail</key>

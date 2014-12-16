@@ -47,6 +47,7 @@ static CircularProgressTimer * progressTimerViewHours;
 static NSInteger minutesCache = -1;
 static NSInteger hoursCache = -1;
 static BOOL enableTweak = NO;
+static BOOL enable24hr = NO;
 static BOOL drawHours = false;
 static BOOL drawMinutes = false;
 static BOOL drawGuideS = true;
@@ -78,7 +79,6 @@ static UIColor *hoursBGColor;
 static NSInteger hoursBGRadius;
 static NSInteger hoursBGWidth;
 
-static bool isSpinning = NO;
 static bool hasAdjusted = NO;
 
 @interface SBCirculateIconImageView : SBClockApplicationIconImageView
@@ -134,7 +134,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 {
 	if (self.dcImage && !hasAdjusted)
 	{
-		NSLog(@"Resetting the frame: %@", NSStringFromCGRect(frameVar));
+		NSLog(@"[Circulate]Resetting the frame: %@", NSStringFromCGRect(frameVar));
 		CGRect imageRect = CGRectMake(frameVar.origin.x,frameVar.origin.y,frameVar.size.width,frameVar.size.height);
 		[self.dcImage setFrame:imageRect];
 		CALayer * mask = [CALayer layer];
@@ -170,11 +170,6 @@ static UIColor* parseColorFromPreferences(NSString* string) {
         }
     }
 
-    /*NSLog(@"Seconds: %ld",(long)seconds);
-    NSLog(@"Seconds color: %@, %@",secondsColor,secondsBGColor);
-    NSLog(@"secondsRadius,bg,width,bg %ld, %ld, %ld, %ld",(long)secondsRadius,(long)secondsBGRadius,(long)secondsWidth,(long)secondsWidth);
-    */
-
     CGRect progressBarFrame = self.dcImage.frame;
     progressTimerViewSeconds = [[%c(CircularProgressTimer) alloc] initWithFrame:progressBarFrame];
     [progressTimerViewSeconds setCenter:self.dcImage.center];
@@ -194,14 +189,6 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 %new - (void)drawCircularProgressBarMinutesLeft:(NSInteger)minutes
 {
-	/*NSLog(@"Drawing the minutes");
-	NSLog(@"Draw guide? %ld",(long)drawGuideM);
-
-	NSLog(@"Min: %ld",(long)minutes);
-    NSLog(@"min color: %@, %@",minutesColor,minutesBGColor);
-    NSLog(@"minR,bg,width,bg %ld, %ld, %ld, %ld",(long)minutesRadius,(long)minutesBGRadius,(long)minutesWidth,(long)minutesBGWidth);
-	*/
-
     CGRect progressBarFrame = self.dcImage.frame;
     progressTimerViewMinutes = [[%c(CircularProgressTimer) alloc] initWithFrame:progressBarFrame];
     [progressTimerViewMinutes setCenter:self.dcImage.center];
@@ -221,8 +208,6 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 %new - (void)drawCircularProgressBarHoursLeft:(NSInteger)hours
 {
-	//NSLog(@"Drawing the hours");
-	//NSLog(@"Draw guide? %ld",(long)drawGuideM);
     CGRect progressBarFrame = self.dcImage.frame;
     progressTimerViewHours = [[%c(CircularProgressTimer) alloc] initWithFrame:progressBarFrame];
     [progressTimerViewHours setCenter:self.dcImage.center];
@@ -246,7 +231,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 	if (orig != nil)
 	{
-		NSLog(@"Circulate Init");
+		NSLog(@"[Circulate]Init");
 		NSBundle *bundle = [[[NSBundle alloc] initWithPath:kBundlePath] autorelease];
 		NSString *imagePath = [bundle pathForResource:@"background" ofType:@"png"];
 		UIImage *image = [UIImage imageWithContentsOfFile:imagePath];
@@ -255,9 +240,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 		[self.dcImage setFrame: iconRect];
 		self.dcImage.clipsToBounds = YES;
 		self.dcImage.tag = 1234;
-		isSpinning = 1;
 		hasAdjusted = 0;
-		NSLog(@"Self: %@",self);
 		[self addSubview:self.dcImage];
 		timer = [NSTimer scheduledTimerWithTimeInterval:1.0
                                              target:self
@@ -272,13 +255,6 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 {
 	if(hasAdjusted && enableTweak)
 	{
-		/*NSLog(@"secondsColor: %@",secondsColor);
-	    NSLog(@"minutesColor: %@",minutesColor);
-	    NSLog(@"hoursColor: %@", hoursColor);
-	    NSLog(@"guideS: %ld",(long)drawGuideS);
-	    NSLog(@"guideM: %ld",(long)drawGuideM);
-	    NSLog(@"guideH: %ld",(long)drawGuideH);*/
-
 		NSDate *today = [NSDate date];
 		NSCalendar *gregorian = [[[NSCalendar alloc]
 		                         initWithCalendarIdentifier:NSGregorianCalendar] autorelease];
@@ -286,11 +262,21 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 		                    [gregorian components:(NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit) fromDate:today];
 
 		NSInteger hours = [components hour];
-		hours = ((float)hours/23.0)*60;
+
+        if(enable24hr)
+        {
+		    hours = ((float)hours/23.0)*60;
+        }
+        else
+        {
+            if(hours > 11)
+                hours = hours - 12;
+
+            hours = ((float)hours/11.0)*60;
+        }
+
 		NSInteger minutes = [components minute];
 		NSInteger seconds = [components second];
-
-//		NSLog(@"Hours: %ld",(long)hours);
 
 		if(hours != hoursCache)
 		{
@@ -304,7 +290,6 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 			minutesCache = minutes;
 		}
 	  	
-//	  	NSLog(@"Refresh view? %ld",(long)refreshView);
 	  	[self drawCircularProgressBarSecondsLeft:seconds];
 	    if(drawMinutes || refreshView)[self drawCircularProgressBarMinutesLeft:minutes];
 	    if(drawHours || refreshView)[self drawCircularProgressBarHoursLeft:hours];
@@ -314,8 +299,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 -(void)dealloc
 {
-	NSLog(@"Circulate deallocated");
-	isSpinning = 0;
+	NSLog(@"[Circulate]Deallocated");
 	hasAdjusted = 0;
 	[timer invalidate];
 	[self.dcImage release];
@@ -373,7 +357,14 @@ static void loadPrefs()
         NSLog(@"[Circulate] We are NOT enabled");
     }
 
-    bool temp = drawGuideS;
+    bool temp = enable24hr;
+
+    enable24hr = !CFPreferencesCopyAppValue(CFSTR("enable24hr"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("enable24hr"), CFSTR("com.joshdoctors.circulate")) boolValue];
+
+    if(temp!=enable24hr)
+        refreshView = YES;
+    
+    temp = drawGuideS;
 
     drawGuideS  = !CFPreferencesCopyAppValue(CFSTR("drawGuideS"), CFSTR("com.joshdoctors.circulate")) ? YES : [(id)CFPreferencesCopyAppValue(CFSTR("drawGuideS"), CFSTR("com.joshdoctors.circulate")) boolValue];
     
@@ -550,7 +541,6 @@ static void loadPrefs()
 }
 
 %end
-
 
 %ctor
 {
