@@ -37,6 +37,24 @@
 			<string>enable24hr</string>
 			<key>label</key>
 			<string>Enable 24Hr Clock</string>
+			<key>id</key>
+			<string>enable24hrswitch</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>com.joshdoctors.circulate/settingschanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.joshdoctors.circulate</string>
+			<key>key</key>
+			<string>drawBars</string>
+			<key>label</key>
+			<string>Display Rising Bars</string>
+			<key>id</key>
+			<string>drawBarsswitch</string>
 		</dict>
 		<dict>
 			<key>cell</key>

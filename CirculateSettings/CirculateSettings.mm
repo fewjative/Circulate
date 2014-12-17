@@ -3,6 +3,8 @@
 
 #define kResetSettingsAlertTag 101
 
+static BOOL isCircles = YES;
+
 @interface CirculateSettingsListController: PSListController {
 }
 @end
@@ -12,6 +14,7 @@
 
 @implementation CirculateSettingsListController
 - (id)specifiers {
+	
 	if(_specifiers == nil) {
 		_specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettings" target:self] retain];
 	}
@@ -35,7 +38,18 @@
     if (buttonIndex == 1) {
     	if (alertView.tag == kResetSettingsAlertTag) {
 
-    		NSLog(@"Resetting settings");
+    		NSLog(@"[Circulate]Resetting settings");
+    		CFPreferencesSetAppValue(CFSTR("enable24hr"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("drawBars"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));
+
+    		PSSpecifier * espec = [self specifierForID:@"enable24hrswitch"];
+    		[self setPreferenceValue:@(NO) specifier:espec];
+    		[self reloadSpecifier:espec animated:YES];
+
+    		PSSpecifier * dspec = [self specifierForID:@"drawBarsswitch"];
+    		[self setPreferenceValue:@(NO) specifier:dspec];
+    		[self reloadSpecifier:dspec animated:YES];
+
     		CFPreferencesSetAppValue(CFSTR("drawGuideS"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("drawGuideM"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("drawGuideH"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
@@ -76,7 +90,6 @@
 -(void)twitter {
 
 	[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://mobile.twitter.com/Fewjative"]];
-
 }
 
 -(void)save
@@ -93,7 +106,13 @@
 @implementation SecondsSettingsListController
 - (id)specifiers {
 	if(_specifiers == nil) {
-		_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettings" target:self] retain];
+
+		isCircles = !(!CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) boolValue]);
+
+		if(isCircles)
+			_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettingsCircles" target:self] retain];
+		else
+			_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettingsBars" target:self] retain];
 	}
 	return _specifiers;
 
@@ -114,7 +133,13 @@
 @implementation MinutesSettingsListController
 - (id)specifiers {
 	if(_specifiers == nil) {
-		_specifiers = [[self loadSpecifiersFromPlistName:@"MinutesSettings" target:self] retain];
+
+		isCircles = !(!CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) boolValue]);
+
+		if(isCircles)
+			_specifiers = [[self loadSpecifiersFromPlistName:@"MinutesSettingsCircles" target:self] retain];
+		else
+			_specifiers = [[self loadSpecifiersFromPlistName:@"MinutesSettingsBars" target:self] retain];
 	}
 	return _specifiers;
 
@@ -135,7 +160,13 @@
 @implementation HoursSettingsListController
 - (id)specifiers {
 	if(_specifiers == nil) {
-		_specifiers = [[self loadSpecifiersFromPlistName:@"HoursSettings" target:self] retain];
+
+		isCircles = !(!CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) boolValue]);
+
+		if(isCircles)
+			_specifiers = [[self loadSpecifiersFromPlistName:@"HoursSettingsCircles" target:self] retain];
+		else
+			_specifiers = [[self loadSpecifiersFromPlistName:@"HoursSettingsBars" target:self] retain];
 	}
 	return _specifiers;
 

@@ -47,6 +47,7 @@ static CircularProgressTimer * progressTimerViewHours;
 static NSInteger minutesCache = -1;
 static NSInteger hoursCache = -1;
 static BOOL enableTweak = NO;
+static BOOL drawBars = NO;
 static BOOL enable24hr = NO;
 static BOOL drawHours = false;
 static BOOL drawMinutes = false;
@@ -95,9 +96,9 @@ static bool hasAdjusted = NO;
 -(void)setHasAdjusted:(BOOL)value;
 -(bool)hasAdjusted;
 - (void)updateCircularProgressBar;
-- (void)drawCircularProgressBarSecondsLeft:(NSInteger)seconds;
-- (void)drawCircularProgressBarMinutesLeft:(NSInteger)minutes;
-- (void)drawCircularProgressBarHoursLeft:(NSInteger)hours;
+- (void)drawProgressBarSecondsLeft:(NSInteger)seconds;
+- (void)drawProgressBarMinutesLeft:(NSInteger)minutes;
+- (void)drawProgressBarHoursLeft:(NSInteger)hours;
 @end
 
 static bool isNumeric(NSString* checkText)
@@ -116,7 +117,6 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [scanner scanHexInt:&rgbValue];
     return [[UIColor alloc] initWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:alpha];
 }
-
 
 %subclass SBCirculateIconImageView : SBClockApplicationIconImageView
 
@@ -153,7 +153,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 }
 
 
-%new - (void)drawCircularProgressBarSecondsLeft:(NSInteger)seconds
+%new - (void)drawProgressBarSecondsLeft:(NSInteger)seconds
 {
 	for (UIView * subView in [self.dcImage subviews]) 
 	{
@@ -181,13 +181,15 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewSeconds setMarginColor:secondsBGColor];
     [progressTimerViewSeconds setMarginRadius:secondsBGRadius];
     [progressTimerViewSeconds setMarginWidth:secondsBGWidth];
+    [progressTimerViewSeconds setDrawBars:drawBars];
+    [progressTimerViewSeconds setPosition:0];
     progressTimerViewSeconds.tag = 111;
 
     [self.dcImage addSubview:progressTimerViewSeconds];
     progressTimerViewSeconds = nil;
 }
 
-%new - (void)drawCircularProgressBarMinutesLeft:(NSInteger)minutes
+%new - (void)drawProgressBarMinutesLeft:(NSInteger)minutes
 {
     CGRect progressBarFrame = self.dcImage.frame;
     progressTimerViewMinutes = [[%c(CircularProgressTimer) alloc] initWithFrame:progressBarFrame];
@@ -200,13 +202,15 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewMinutes setMarginColor:minutesBGColor];
     [progressTimerViewMinutes setMarginRadius:minutesBGRadius];
     [progressTimerViewMinutes setMarginWidth:minutesBGWidth];
+    [progressTimerViewMinutes setDrawBars:drawBars];
+    [progressTimerViewMinutes setPosition:1];
     progressTimerViewMinutes.tag = 222;
 
     [self.dcImage addSubview:progressTimerViewMinutes];
     progressTimerViewMinutes = nil;
 }
 
-%new - (void)drawCircularProgressBarHoursLeft:(NSInteger)hours
+%new - (void)drawProgressBarHoursLeft:(NSInteger)hours
 {
     CGRect progressBarFrame = self.dcImage.frame;
     progressTimerViewHours = [[%c(CircularProgressTimer) alloc] initWithFrame:progressBarFrame];
@@ -219,6 +223,8 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewHours setMarginColor:hoursBGColor];
     [progressTimerViewHours setMarginRadius:hoursBGRadius];
     [progressTimerViewHours setMarginWidth:hoursBGWidth];
+    [progressTimerViewHours setDrawBars:drawBars];
+    [progressTimerViewHours setPosition:2];
     progressTimerViewHours.tag = 333;
 
     [self.dcImage addSubview:progressTimerViewHours];
@@ -290,9 +296,9 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 			minutesCache = minutes;
 		}
 	  	
-	  	[self drawCircularProgressBarSecondsLeft:seconds];
-	    if(drawMinutes || refreshView)[self drawCircularProgressBarMinutesLeft:minutes];
-	    if(drawHours || refreshView)[self drawCircularProgressBarHoursLeft:hours];
+	  	[self drawProgressBarSecondsLeft:seconds];
+	    if(drawMinutes || refreshView)[self drawProgressBarMinutesLeft:minutes];
+	    if(drawHours || refreshView)[self drawProgressBarHoursLeft:hours];
 	    refreshView = NO;
 	}
 }
@@ -332,13 +338,13 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 	if ([[icon leafIdentifier] isEqualToString:@"com.apple.mobiletimer"])
 	{
-		NSLog(@"_setIcon for mobiletimer");
+		NSLog(@"[Circulate]_setIcon for mobiletimer");
 		
 		SBClockApplicationIconImageView * img = MSHookIvar<SBClockApplicationIconImageView*>(self,"_iconImageView");
 
 		if([img isKindOfClass:%c(SBClockApplicationIconImageView)])
 		{
-			NSLog(@"Our image ivar is of the correct class.");
+			NSLog(@"[Circulate]Our image ivar is of the correct class.");
 			[img setDynamicFrame:[img bounds]];
 		}	
 	}
@@ -362,6 +368,13 @@ static void loadPrefs()
     enable24hr = !CFPreferencesCopyAppValue(CFSTR("enable24hr"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("enable24hr"), CFSTR("com.joshdoctors.circulate")) boolValue];
 
     if(temp!=enable24hr)
+        refreshView = YES;
+
+    temp = drawBars;
+
+    drawBars = !CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) boolValue];
+
+    if(temp!=drawBars)
         refreshView = YES;
     
     temp = drawGuideS;
@@ -544,7 +557,7 @@ static void loadPrefs()
 
 %ctor
 {
-	NSLog(@"Loading Circulate");
+	NSLog(@"[Circulate]Loading Circulate");
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
                                 NULL,
                                 (CFNotificationCallback)loadPrefs,
