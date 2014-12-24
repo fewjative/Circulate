@@ -47,7 +47,7 @@ static CircularProgressTimer * progressTimerViewHours;
 static NSInteger minutesCache = -1;
 static NSInteger hoursCache = -1;
 static BOOL enableTweak = NO;
-static BOOL drawBars = NO;
+static CGFloat theme = 0.0;
 static BOOL enable24hr = NO;
 static BOOL drawHours = false;
 static BOOL drawMinutes = false;
@@ -181,11 +181,12 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewSeconds setMarginColor:secondsBGColor];
     [progressTimerViewSeconds setMarginRadius:secondsBGRadius];
     [progressTimerViewSeconds setMarginWidth:secondsBGWidth];
-    [progressTimerViewSeconds setDrawBars:drawBars];
+    [progressTimerViewSeconds setTheme:theme];
     [progressTimerViewSeconds setPosition:0];
     progressTimerViewSeconds.tag = 111;
 
     [self.dcImage addSubview:progressTimerViewSeconds];
+    [progressTimerViewSeconds release];
     progressTimerViewSeconds = nil;
 }
 
@@ -202,11 +203,12 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewMinutes setMarginColor:minutesBGColor];
     [progressTimerViewMinutes setMarginRadius:minutesBGRadius];
     [progressTimerViewMinutes setMarginWidth:minutesBGWidth];
-    [progressTimerViewMinutes setDrawBars:drawBars];
+    [progressTimerViewMinutes setTheme:theme];
     [progressTimerViewMinutes setPosition:1];
     progressTimerViewMinutes.tag = 222;
 
     [self.dcImage addSubview:progressTimerViewMinutes];
+    [progressTimerViewMinutes release];
     progressTimerViewMinutes = nil;
 }
 
@@ -223,11 +225,12 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewHours setMarginColor:hoursBGColor];
     [progressTimerViewHours setMarginRadius:hoursBGRadius];
     [progressTimerViewHours setMarginWidth:hoursBGWidth];
-    [progressTimerViewHours setDrawBars:drawBars];
+    [progressTimerViewHours setTheme:theme];
     [progressTimerViewHours setPosition:2];
     progressTimerViewHours.tag = 333;
 
     [self.dcImage addSubview:progressTimerViewHours];
+    [progressTimerViewHours release];
     progressTimerViewHours = nil;
 }
 
@@ -278,7 +281,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
             if(hours > 11)
                 hours = hours - 12;
 
-            hours = ((float)hours/11.0)*60;
+            hours = ((float)hours/12.0)*60;
         }
 
 		NSInteger minutes = [components minute];
@@ -363,18 +366,18 @@ static void loadPrefs()
         NSLog(@"[Circulate] We are NOT enabled");
     }
 
+    CGFloat temptheme = theme;
+
+    theme = !CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) floatValue];
+
+    if(temptheme!=theme)
+        refreshView = YES;
+
     bool temp = enable24hr;
 
     enable24hr = !CFPreferencesCopyAppValue(CFSTR("enable24hr"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("enable24hr"), CFSTR("com.joshdoctors.circulate")) boolValue];
 
     if(temp!=enable24hr)
-        refreshView = YES;
-
-    temp = drawBars;
-
-    drawBars = !CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) boolValue];
-
-    if(temp!=drawBars)
         refreshView = YES;
     
     temp = drawGuideS;

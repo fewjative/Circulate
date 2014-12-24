@@ -23,41 +23,7 @@
 
 - (void)drawRect:(CGRect)rect
 {
-    CGRect barRect;
-    CGRect guideRect;
-    NSInteger origin;
-    CGFloat frameWidth = rect.size.width;
-    CGFloat padding = (frameWidth*3/17.0);
-    CGFloat barSpace = (frameWidth*1/17.0);
-
-    if(self.drawBars)
-    {
-        if(self.position==0)//far right bar - seconds
-        {
-            origin = (padding*3)+(barSpace*2);
-        }
-        else if(self.position==1)//middle bar - minutes
-        {
-            origin = (padding*2)+barSpace;
-        }
-        else//left bar - hours
-        {
-            origin =  padding;
-        }
-
-        if(self.drawGuide)
-        {
-           guideRect = CGRectMake(rect.origin.x+origin,rect.origin.y+padding,padding,(frameWidth*11/17.0));
-           UIBezierPath * guidePath = [UIBezierPath bezierPathWithRoundedRect:guideRect cornerRadius:0];
-           [self.marginColor setFill];
-           [guidePath fill];
-        }
-        barRect = CGRectMake(rect.origin.x+origin,rect.origin.y+padding+(frameWidth*11/17.0)*(1-(self.percent/60.0)),padding,(frameWidth*11/17.0)*(self.percent/60.0));
-        UIBezierPath * barPath = [UIBezierPath bezierPathWithRoundedRect:barRect cornerRadius:0];
-        [self.instanceColor setFill];
-        [barPath fill];
-    }
-    else
+    if(_theme==0.0)
     {
         if(self.drawGuide)
         {
@@ -83,6 +49,40 @@
         bezierPath.lineWidth = self.width;
         [self.instanceColor setStroke];
         [bezierPath stroke];
+    }
+    else if(_theme==1.0)
+    {
+        CGRect barRect;
+        CGRect guideRect;
+        NSInteger origin;
+        CGFloat frameWidth = rect.size.width;
+        CGFloat padding = (frameWidth*3/17.0);
+        CGFloat barSpace = (frameWidth*1/17.0);
+
+        if(self.position==0)//far right bar - seconds
+        {
+            origin = (padding*3)+(barSpace*2);
+        }
+        else if(self.position==1)//middle bar - minutes
+        {
+            origin = (padding*2)+barSpace;
+        }
+        else//left bar - hours
+        {
+            origin =  padding;
+        }
+
+        if(self.drawGuide)
+        {
+           guideRect = CGRectMake(rect.origin.x+origin,rect.origin.y+padding,padding,(frameWidth*11/17.0));
+           UIBezierPath * guidePath = [UIBezierPath bezierPathWithRoundedRect:guideRect cornerRadius:0];
+           [self.marginColor setFill];
+           [guidePath fill];
+        }
+        barRect = CGRectMake(rect.origin.x+origin,rect.origin.y+padding+(frameWidth*11/17.0)*(1-(self.percent/60.0)),padding,(frameWidth*11/17.0)*(self.percent/60.0));
+        UIBezierPath * barPath = [UIBezierPath bezierPathWithRoundedRect:barRect cornerRadius:0];
+        [self.instanceColor setFill];
+        [barPath fill];
     }
 }
 

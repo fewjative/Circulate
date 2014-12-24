@@ -100,6 +100,14 @@
             <key>label</key>            <string>Save</string>
             <key>action</key>           <string>save</string>
         </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+            <key>footerAlignment</key>
+            <integer>1</integer>
+            <key>footerText</key>
+            <string>Default Radius is 25 and Width is 5.</string>
+        </dict>
 	</array>
 	<key>title</key>
 	<string>Hours Options</string>

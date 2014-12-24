@@ -3,7 +3,7 @@
 
 #define kResetSettingsAlertTag 101
 
-static BOOL isCircles = YES;
+static CGFloat theme = 0.0;
 
 @interface CirculateSettingsListController: PSListController {
 }
@@ -40,15 +40,15 @@ static BOOL isCircles = YES;
 
     		NSLog(@"[Circulate]Resetting settings");
     		CFPreferencesSetAppValue(CFSTR("enable24hr"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));
-    		CFPreferencesSetAppValue(CFSTR("drawBars"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("theme"), CFSTR("0.0"), CFSTR("com.joshdoctors.circulate"));
 
     		PSSpecifier * espec = [self specifierForID:@"enable24hrswitch"];
     		[self setPreferenceValue:@(NO) specifier:espec];
     		[self reloadSpecifier:espec animated:YES];
 
-    		PSSpecifier * dspec = [self specifierForID:@"drawBarsswitch"];
-    		[self setPreferenceValue:@(NO) specifier:dspec];
-    		[self reloadSpecifier:dspec animated:YES];
+    		PSSpecifier * tspec = [self specifierForID:@"themeList"];
+    		[self setPreferenceValue:@(0.0) specifier:tspec];
+    		[self reloadSpecifier:tspec animated:NO];
 
     		CFPreferencesSetAppValue(CFSTR("drawGuideS"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("drawGuideM"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
@@ -107,11 +107,11 @@ static BOOL isCircles = YES;
 - (id)specifiers {
 	if(_specifiers == nil) {
 
-		isCircles = !(!CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) boolValue]);
+		theme = (!CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) floatValue]);
 
-		if(isCircles)
-			_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettingsCircles" target:self] retain];
-		else
+		if(theme==0.0)
+			_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettingsCircles" target:self] retain];    
+		else if(theme==1.0)
 			_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettingsBars" target:self] retain];
 	}
 	return _specifiers;
@@ -134,17 +134,16 @@ static BOOL isCircles = YES;
 - (id)specifiers {
 	if(_specifiers == nil) {
 
-		isCircles = !(!CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) boolValue]);
+		theme = (!CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) floatValue]);
 
-		if(isCircles)
+		if(theme==0.0)
 			_specifiers = [[self loadSpecifiersFromPlistName:@"MinutesSettingsCircles" target:self] retain];
-		else
+		else if(theme==1.0)
 			_specifiers = [[self loadSpecifiersFromPlistName:@"MinutesSettingsBars" target:self] retain];
 	}
 	return _specifiers;
 
 }
-
 
 -(void)save
 {
@@ -161,11 +160,11 @@ static BOOL isCircles = YES;
 - (id)specifiers {
 	if(_specifiers == nil) {
 
-		isCircles = !(!CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("drawBars"), CFSTR("com.joshdoctors.circulate")) boolValue]);
+		theme = (!CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) floatValue]);
 
-		if(isCircles)
+		if(theme==0.0)
 			_specifiers = [[self loadSpecifiersFromPlistName:@"HoursSettingsCircles" target:self] retain];
-		else
+		else if(theme==1.0)
 			_specifiers = [[self loadSpecifiersFromPlistName:@"HoursSettingsBars" target:self] retain];
 	}
 	return _specifiers;

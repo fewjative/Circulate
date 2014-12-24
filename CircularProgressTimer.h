@@ -24,6 +24,6 @@
 @property (nonatomic) NSInteger marginRadius;
 @property (nonatomic) NSInteger marginWidth;
 @property (nonatomic) BOOL drawGuide;
-@property (nonatomic) BOOL drawBars;
+@property (nonatomic) CGFloat theme;
 @property (nonatomic) NSInteger position;
 @end

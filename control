@@ -1,9 +1,9 @@
 Package: com.joshdoctors.circulate
 Name: Circulate
-Depends: mobilesubstrate
+Depends: mobilesubstrate,org.thebigboss.libcolorpicker
 Version: 0.0.1
 Architecture: iphoneos-arm
-Description: Dynamic clock icon that shows the current time using moving circles.
+Description: Dynamic clock icon that shows the current time using moving coencentric circles or vertical rising bars.
 Maintainer: Josh Doctors
 Author: Josh Doctors
 Section: Tweaks
