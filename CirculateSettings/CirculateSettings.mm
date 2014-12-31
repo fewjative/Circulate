@@ -14,13 +14,46 @@ static CGFloat theme = 0.0;
 
 @implementation CirculateSettingsListController
 - (id)specifiers {
+	NSLog(@"specifiers");
 	
 	if(_specifiers == nil) {
-		_specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettings" target:self] retain];
+
+        theme = (!CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) floatValue]);
+
+        if(theme==2.0)
+            _specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettingsHex" target:self] retain];    
+        else
+            _specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettings" target:self] retain];
+
 	}
 	return _specifiers;
 
 }
+
+-(void)viewWillDisappear:(BOOL)animated
+{
+	NSLog(@"viewWillDisappear");
+	[super viewWillDisappear:animated];
+}
+
+-(void)viewDidLoad{
+	NSLog(@"viewDidLoad");
+	[super viewDidLoad];
+}
+
+-(void)viewWillAppear:(BOOL)animated
+{
+	NSLog(@"viewWillAppear");
+	[super viewWillAppear:animated];
+	[self reload];
+	[self reloadSpecifiers];
+}
+
+/*
+-(void)tableView:(id)view didSelectRowAtIndexPath:(id)path
+{
+    [super tableView:view didSelectRowAtIndexPath:path];
+}*/
 
 -(void)resetSettings 
 {
@@ -49,6 +82,18 @@ static CGFloat theme = 0.0;
     		PSSpecifier * tspec = [self specifierForID:@"themeList"];
     		[self setPreferenceValue:@(0.0) specifier:tspec];
     		[self reloadSpecifier:tspec animated:NO];
+
+            PSSpecifier * bspec = [self specifierForID:@"useStaticBackgroundSwitch"];
+            [self setPreferenceValue:@(YES) specifier:bspec];
+            [self reloadSpecifier:bspec animated:NO];
+
+            CFPreferencesSetAppValue(CFSTR("hexTime"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("hexGradient"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));
+
+            CFPreferencesSetAppValue(CFSTR("colorMode"), CFSTR("0.0"), CFSTR("com.joshdoctors.circulate"));
+            CFPreferencesSetAppValue(CFSTR("useStaticBackground"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
+            CFPreferencesSetAppValue(CFSTR("firstColor"), CFSTR("#000000:1.000000"), CFSTR("com.joshdoctors.circulate"));
+            CFPreferencesSetAppValue(CFSTR("secondColor"), CFSTR("#616161:1.000000"), CFSTR("com.joshdoctors.circulate"));
 
     		CFPreferencesSetAppValue(CFSTR("drawGuideS"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("drawGuideM"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
@@ -90,6 +135,27 @@ static CGFloat theme = 0.0;
 -(void)twitter {
 
 	[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://mobile.twitter.com/Fewjative"]];
+}
+
+-(void)save
+{
+    [self.view endEditing:YES];
+}
+
+@end
+
+@interface BackgroundSettingsListController: PSListController {
+}
+@end
+
+@implementation BackgroundSettingsListController
+- (id)specifiers {
+    if(_specifiers == nil) {
+     
+            _specifiers = [[self loadSpecifiersFromPlistName:@"BackgroundSettings" target:self] retain];    
+
+    }
+    return _specifiers;
 }
 
 -(void)save

@@ -3,12 +3,13 @@
 #import <UIKit/UIKit.h>
 #import <substrate.h>
 #import <CircularProgressTimer.m>
+#import <HexClock.m>
 
 #define kBundlePath @"/Library/PreferenceBundles/CirculateSettings.bundle"
 #define SYS_VER_GREAT_OR_EQUAL(v) ([[[UIDevice currentDevice] systemVersion] compare:v options:64] != NSOrderedAscending)
 #define kDefaultWhiteColor [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1.0f]
 #define kDefaultGrayColor [[UIColor alloc] initWithRed:97/255.0f green:97/255.0f blue:97/255.0f alpha:1.00f]
-
+#define kDefaultBlackColor [[UIColor alloc] initWithRed:0.0f green:0.0f blue:0.0f alpha:1.0f]
 
 @interface UIImage ()
 @property (assign,nonatomic) CGRect mediaImageSubRect;
@@ -44,6 +45,9 @@ static NSTimer * timer;
 static CircularProgressTimer * progressTimerViewSeconds;
 static CircularProgressTimer * progressTimerViewMinutes;
 static CircularProgressTimer * progressTimerViewHours;
+
+static HexClock * hexClockView;
+
 static NSInteger minutesCache = -1;
 static NSInteger hoursCache = -1;
 static BOOL enableTweak = NO;
@@ -79,6 +83,15 @@ static NSInteger hoursWidth;
 static UIColor *hoursBGColor;
 static NSInteger hoursBGRadius;
 static NSInteger hoursBGWidth;
+
+static BOOL useStaticBackground = YES;
+static UIColor *firstColor;
+static UIColor *secondColor;
+static CGFloat colorMode = 0.0;
+static BOOL redrawBackground = NO;
+
+static BOOL hexTime = NO;
+static BOOL hexGradient = NO;
 
 static bool hasAdjusted = NO;
 
@@ -130,6 +143,130 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 	objc_setAssociatedObject(self,@selector(dcImage),value,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
+%new - (UIImage*)solidImage{
+    CGRect rect = CGRectMake(0.0f,0.0f,1.0f,1.0f);
+    UIGraphicsBeginImageContext(rect.size);
+     CGContextRef context= UIGraphicsGetCurrentContext();
+
+     CGContextSetFillColorWithColor(context,[firstColor CGColor]);
+     CGContextFillRect(context,rect);
+
+     UIImage * image = UIGraphicsGetImageFromCurrentImageContext();
+     UIGraphicsEndImageContext();
+     return image;
+}
+
+%new - (UIImage *)radialGradientImage {
+    // Render a radial background
+    // http://developer.apple.com/library/ios/#documentation/GraphicsImaging/Conceptual/drawingwithquartz2d/dq_shadings/dq_shadings.html
+    
+    // Initialise
+    UIGraphicsBeginImageContext(self.frame.size);
+    
+    // Create the gradient's colours
+    size_t num_locations = 2;
+    CGFloat locations[2] = { 0.0, 1.0 };
+    CGFloat components[8] = { 0,0,0,0,  // Start color
+                              0,0,0,0 }; // End color
+    [firstColor getRed:&components[0] green:&components[1] blue:&components[2] alpha:&components[3]];
+    [secondColor getRed:&components[4] green:&components[5] blue:&components[6] alpha:&components[7]];
+    
+    CGColorSpaceRef myColorspace = CGColorSpaceCreateDeviceRGB();
+    CGGradientRef myGradient = CGGradientCreateWithColorComponents (myColorspace, components, locations, num_locations);
+    
+    // Normalise the 0-1 ranged inputs to the width of the image
+    CGPoint gradCenter = CGPointMake(self.bounds.size.width/2,self.bounds.size.height/2);
+    float myRadius = MIN(self.bounds.size.width, self.bounds.size.height)/2;
+    
+    // Draw it!
+    CGContextRef context= UIGraphicsGetCurrentContext();
+
+    if(context)
+    {
+        CGContextDrawRadialGradient (context, myGradient, gradCenter,0, gradCenter, myRadius, kCGGradientDrawsAfterEndLocation);
+    }
+    
+    [self.dcImage.layer renderInContext:context];
+    // Grab it as an autoreleased image
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIImageWriteToSavedPhotosAlbum(image,nil,nil,nil);
+    
+    // Clean up
+    CGColorSpaceRelease(myColorspace); // Necessary?
+    CGGradientRelease(myGradient); // Necessary?
+    UIGraphicsEndImageContext(); // Clean up
+    return image;
+}
+
+%new - (void)redrawBackground
+{
+    if(redrawBackground && theme < 2.0)
+    {
+        NSLog(@"Redrawing Background");
+
+        for(CAGradientLayer * layer in [[self.dcImage.layer.sublayers copy] autorelease])
+        {
+            if([layer isKindOfClass:[CAGradientLayer class]])
+                [layer removeFromSuperlayer];
+        }
+
+        if(useStaticBackground)
+        {
+            NSLog(@"Using static background");
+            NSBundle *bundle = [[[NSBundle alloc] initWithPath:kBundlePath] autorelease];
+            NSString *imagePath = [bundle pathForResource:@"background" ofType:@"png"];
+            UIImage *image = [UIImage imageWithContentsOfFile:imagePath];
+            self.dcImage.image = image;
+        }
+        else
+        {
+            if(colorMode==0.0)
+            {
+                NSLog(@"ColorMode 0.0");
+                CAGradientLayer * gradient = [CAGradientLayer layer];
+                gradient.frame = self.dcImage.frame;
+                gradient.colors = @[(id)firstColor.CGColor,(id)firstColor.CGColor];
+                [self.dcImage.layer addSublayer:gradient];
+                self.dcImage.image = nil;
+            }
+            else if(colorMode==1.0)
+            {
+                NSLog(@"ColorMode 1.0");
+                CAGradientLayer * gradient = [CAGradientLayer layer];
+                gradient.frame = self.dcImage.frame;
+                gradient.colors = @[(id)firstColor.CGColor,(id)secondColor.CGColor];
+                [self.dcImage.layer addSublayer:gradient];
+                self.dcImage.image = nil;
+            }
+            else if(colorMode==2.0)
+            {
+                NSLog(@"ColorMode 2.0");
+                self.dcImage.image = nil;
+                [self.dcImage setImage:[self radialGradientImage]];
+            }
+        }
+
+        CALayer * mask = [CALayer layer];
+        UIImage * imgMask = [self _iconBasicOverlayImage];
+        mask.contents = (id)[imgMask CGImage];
+        mask.frame = CGRectMake(0,0,imgMask.size.width,imgMask.size.height);
+        self.dcImage.layer.mask = mask;
+        self.dcImage.layer.masksToBounds = YES;
+        redrawBackground = NO;
+        NSLog(@"Finished Drawing Background");
+    }
+}
+
+%new - (void)applyMask
+{
+    CALayer * mask = [CALayer layer];
+    UIImage * imgMask = [self _iconBasicOverlayImage];
+    mask.contents = (id)[imgMask CGImage];
+    mask.frame = CGRectMake(0,0,imgMask.size.width,imgMask.size.height);
+    self.dcImage.layer.mask = mask;
+    self.dcImage.layer.masksToBounds = YES;
+}
+
 %new - (void)setDynamicFrame:(CGRect)frameVar
 {
 	if (self.dcImage && !hasAdjusted)
@@ -137,12 +274,8 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 		NSLog(@"[Circulate]Resetting the frame: %@", NSStringFromCGRect(frameVar));
 		CGRect imageRect = CGRectMake(frameVar.origin.x,frameVar.origin.y,frameVar.size.width,frameVar.size.height);
 		[self.dcImage setFrame:imageRect];
-		CALayer * mask = [CALayer layer];
-		UIImage * imgMask = [self _iconBasicOverlayImage];
-		mask.contents = (id)[imgMask CGImage];
-		mask.frame = CGRectMake(0,0,imgMask.size.width,imgMask.size.height);
-		self.dcImage.layer.mask = mask;
-		self.dcImage.layer.masksToBounds = YES;
+        redrawBackground = YES;
+        [self redrawBackground];
 		hasAdjusted = 1;
 	}
 }
@@ -151,7 +284,6 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 {
 	return [[NSScanner scannerWithString:checkText] scanFloat:NULL];
 }
-
 
 %new - (void)drawProgressBarSecondsLeft:(NSInteger)seconds
 {
@@ -167,6 +299,10 @@ static UIColor* parseColorFromPreferences(NSString* string) {
            	else
            		if(subView.tag==333 && drawHours)
            			[subView removeFromSuperview];
+        }
+        else if([subView isKindOfClass:[HexClock class]])
+        {
+            [subView removeFromSuperview];
         }
     }
 
@@ -234,6 +370,31 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     progressTimerViewHours = nil;
 }
 
+%new - (void)drawHexView:(NSInteger)seconds minutes:(NSInteger)minutes hours:(NSInteger)hours
+{
+    for (UIView * subView in [self.dcImage subviews]) 
+    {
+        if ([subView isKindOfClass:[HexClock class]]) 
+        {
+                [subView removeFromSuperview];
+        }
+    }
+
+    CGRect progressBarFrame = self.dcImage.frame;
+    hexClockView = [[%c(HexClock) alloc] initWithFrame:progressBarFrame];
+    [hexClockView setSeconds:seconds];
+    [hexClockView setMinutes:minutes];
+    [hexClockView setHours:hours];
+    [hexClockView setEnable24hr:enable24hr];
+    [hexClockView setHexGradient:hexGradient];
+    [hexClockView setHexTime:hexTime];
+    hexClockView.tag = 444;
+
+    [self.dcImage addSubview:hexClockView];
+    [hexClockView release];
+    hexClockView = nil;
+}
+
 -(id)initWithFrame:(CGRect)frame
 {
 	id orig = %orig;
@@ -299,10 +460,17 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 			minutesCache = minutes;
 		}
 	  	
-	  	[self drawProgressBarSecondsLeft:seconds];
-	    if(drawMinutes || refreshView)[self drawProgressBarMinutesLeft:minutes];
-	    if(drawHours || refreshView)[self drawProgressBarHoursLeft:hours];
-	    refreshView = NO;
+        if(theme < 2.0)
+        {
+    	  	[self drawProgressBarSecondsLeft:seconds];
+    	    if(drawMinutes || refreshView)[self drawProgressBarMinutesLeft:minutes];
+    	    if(drawHours || refreshView)[self drawProgressBarHoursLeft:hours];
+    	    refreshView = NO;
+        }else if(theme==2.0)
+        {
+            [self drawHexView:seconds minutes:minutes hours:[components hour]];
+            [self applyMask];
+        }
 	}
 }
 
@@ -323,6 +491,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 	{
 		[self _setAnimating:0];
 		[self.dcImage setHidden:0];
+        [self redrawBackground];
 	}
 	else
 	{
@@ -366,12 +535,25 @@ static void loadPrefs()
         NSLog(@"[Circulate] We are NOT enabled");
     }
 
-    CGFloat temptheme = theme;
+    CGFloat tempchoice = theme;
 
     theme = !CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) floatValue];
 
-    if(temptheme!=theme)
+    if(tempchoice!=theme)
+    {
         refreshView = YES;
+        redrawBackground = YES;
+    }
+
+    tempchoice = colorMode;
+
+    colorMode = !CFPreferencesCopyAppValue(CFSTR("colorMode"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("colorMode"), CFSTR("com.joshdoctors.circulate")) floatValue];
+
+    if(tempchoice!=colorMode)
+    {
+        refreshView = YES;
+        redrawBackground = YES;
+    }
 
     bool temp = enable24hr;
 
@@ -379,6 +561,19 @@ static void loadPrefs()
 
     if(temp!=enable24hr)
         refreshView = YES;
+
+    temp = useStaticBackground;
+
+    useStaticBackground = !CFPreferencesCopyAppValue(CFSTR("useStaticBackground"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("useStaticBackground"), CFSTR("com.joshdoctors.circulate")) boolValue];
+
+    if(temp!=useStaticBackground)
+    {
+        refreshView = YES;
+        redrawBackground = YES;
+    }
+
+    hexTime = !CFPreferencesCopyAppValue(CFSTR("hexTime"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("hexTime"), CFSTR("com.joshdoctors.circulate")) boolValue];
+    hexGradient = !CFPreferencesCopyAppValue(CFSTR("hexGradient"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("hexGradient"), CFSTR("com.joshdoctors.circulate")) boolValue];
     
     temp = drawGuideS;
 
@@ -401,7 +596,27 @@ static void loadPrefs()
      if(temp!=drawGuideH)
     	refreshView = YES;
 
-    UIColor * tempC = secondsColor;
+    UIColor * tempC = firstColor;
+
+    firstColor = !CFPreferencesCopyAppValue(CFSTR("firstColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultBlackColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("firstColor"), CFSTR("com.joshdoctors.circulate")));
+    
+    if(![tempC isEqual:firstColor])
+    {
+        refreshView = YES;
+        redrawBackground = YES;
+    }
+
+    tempC = secondColor;
+
+    secondColor = !CFPreferencesCopyAppValue(CFSTR("secondColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultGrayColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("secondColor"), CFSTR("com.joshdoctors.circulate")));
+    
+    if(![tempC isEqual:secondColor])
+    {
+        refreshView = YES;
+        redrawBackground = YES;
+    }
+
+    tempC = secondsColor;
 
     secondsColor = !CFPreferencesCopyAppValue(CFSTR("secondsColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultWhiteColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("secondsColor"), CFSTR("com.joshdoctors.circulate")));
     

@@ -63,60 +63,36 @@
 			<string>themeList</string>
 		</dict>
 		<dict>
+			<key>PostNotification</key>
+			<string>com.joshdoctors.circulate/settingschanged</string>
 			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>detail</key>
-			<string>SecondsSettingsListController</string>
-			<key>icon</key>
-			<string>seconds@2x.png</string>
-			<key>isController</key>
-			<true/>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.joshdoctors.circulate</string>
 			<key>key</key>
-			<string>SecondsSettings</string>
+			<string>hexTime</string>
 			<key>label</key>
-			<string>Seconds Options</string>
+			<string>Time in Hex format?</string>
+			<key>id</key>
+			<string>hexTimeSwitch</string>
 		</dict>
 		<dict>
+			<key>PostNotification</key>
+			<string>com.joshdoctors.circulate/settingschanged</string>
 			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>detail</key>
-			<string>MinutesSettingsListController</string>
-			<key>icon</key>
-			<string>minutes@2x.png</string>
-			<key>isController</key>
-			<true/>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.joshdoctors.circulate</string>
 			<key>key</key>
-			<string>MinutesSettings</string>
+			<string>hexGradient</string>
 			<key>label</key>
-			<string>Minutes Options</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>detail</key>
-			<string>HoursSettingsListController</string>
-			<key>icon</key>
-			<string>hours@2x.png</string>
-			<key>isController</key>
-			<true/>
-			<key>key</key>
-			<string>HoursSettings</string>
-			<key>label</key>
-			<string>Hours Options</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>detail</key>
-			<string>BackgroundSettingsListController</string>
-			<key>icon</key>
-			<string>backgroundicon@2x.png</string>
-			<key>isController</key>
-			<true/>
-			<key>key</key>
-			<string>BackgroundSettings</string>
-			<key>label</key>
-			<string>Background Options</string>
+			<string>Slight Gradient?</string>
+			<key>id</key>
+			<string>hexGradientSwitch</string>
 		</dict>
 		<dict>
             <key>cell</key>
