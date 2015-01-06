@@ -59,10 +59,14 @@ static BOOL drawGuideS = true;
 static BOOL drawGuideM = true;
 static BOOL drawGuideH = true;
 static BOOL refreshView = false;
+static BOOL drawCircle = true;
+static NSInteger circleRadius = 55;
+static UIColor * circleBackgroundColor;
 
 static UIColor *secondsColor;
 static NSInteger secondsRadius;
 static NSInteger secondsWidth;
+static NSInteger secondsCircleRadius = 10;
 
 static UIColor *secondsBGColor;
 static NSInteger secondsBGRadius;
@@ -71,6 +75,7 @@ static NSInteger secondsBGWidth;
 static UIColor *minutesColor;
 static NSInteger minutesRadius;
 static NSInteger minutesWidth;
+static NSInteger minutesCircleRadius = 15;
 
 static UIColor *minutesBGColor;
 static NSInteger minutesBGRadius;
@@ -79,6 +84,7 @@ static NSInteger minutesBGWidth;
 static UIColor *hoursColor;
 static NSInteger hoursRadius;
 static NSInteger hoursWidth;
+static NSInteger hoursCircleRadius = 20;
 
 static UIColor *hoursBGColor;
 static NSInteger hoursBGRadius;
@@ -94,6 +100,9 @@ static BOOL hexTime = NO;
 static BOOL hexGradient = NO;
 
 static bool hasAdjusted = NO;
+
+static UIImage * defaultIconImage = nil;
+static bool hasDefaultIconImage = NO;
 
 @interface SBCirculateIconImageView : SBClockApplicationIconImageView
 -(id)initWithFrame:(CGRect)frame;
@@ -112,6 +121,7 @@ static bool hasAdjusted = NO;
 - (void)drawProgressBarSecondsLeft:(NSInteger)seconds;
 - (void)drawProgressBarMinutesLeft:(NSInteger)minutes;
 - (void)drawProgressBarHoursLeft:(NSInteger)hours;
+-(id)image;
 @end
 
 static bool isNumeric(NSString* checkText)
@@ -157,6 +167,11 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 }
 
 %new - (UIImage *)radialGradientImage {
+
+    for (UIView * subView in [self.dcImage subviews]) 
+    {
+        [subView removeFromSuperview];
+    }
     // Render a radial background
     // http://developer.apple.com/library/ios/#documentation/GraphicsImaging/Conceptual/drawingwithquartz2d/dq_shadings/dq_shadings.html
     
@@ -189,7 +204,6 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [self.dcImage.layer renderInContext:context];
     // Grab it as an autoreleased image
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIImageWriteToSavedPhotosAlbum(image,nil,nil,nil);
     
     // Clean up
     CGColorSpaceRelease(myColorspace); // Necessary?
@@ -200,7 +214,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 %new - (void)redrawBackground
 {
-    if(redrawBackground && theme < 2.0)
+    if(redrawBackground && theme < 3.0)
     {
         NSLog(@"Redrawing Background");
 
@@ -287,22 +301,25 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 %new - (void)drawProgressBarSecondsLeft:(NSInteger)seconds
 {
-	for (UIView * subView in [self.dcImage subviews]) 
-	{
-        if ([subView isKindOfClass:[CircularProgressTimer class]]) 
-        {
-        	if(subView.tag==111 || refreshView)
-           		[subView removeFromSuperview];
-           	else
-           		if(subView.tag==222 && drawMinutes)
-           			[subView removeFromSuperview];
-           	else
-           		if(subView.tag==333 && drawHours)
-           			[subView removeFromSuperview];
-        }
-        else if([subView isKindOfClass:[HexClock class]])
-        {
-            [subView removeFromSuperview];
+    if(theme==0.0 || theme==1.0)
+    {
+    	for (UIView * subView in [self.dcImage subviews]) 
+    	{
+            if ([subView isKindOfClass:[CircularProgressTimer class]]) 
+            {
+            	if(subView.tag==111 || refreshView)
+               		[subView removeFromSuperview];
+               	else
+               		if(subView.tag==222 && drawMinutes)
+               			[subView removeFromSuperview];
+               	else
+               		if(subView.tag==333 && drawHours)
+               			[subView removeFromSuperview];
+            }
+            else if([subView isKindOfClass:[HexClock class]])
+            {
+                [subView removeFromSuperview];
+            }
         }
     }
 
@@ -319,6 +336,9 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewSeconds setMarginWidth:secondsBGWidth];
     [progressTimerViewSeconds setTheme:theme];
     [progressTimerViewSeconds setPosition:0];
+    [progressTimerViewSeconds setCircleRadius:secondsCircleRadius];
+    [progressTimerViewSeconds setOuterCircleRadius:circleRadius];
+
     progressTimerViewSeconds.tag = 111;
 
     [self.dcImage addSubview:progressTimerViewSeconds];
@@ -341,6 +361,8 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewMinutes setMarginWidth:minutesBGWidth];
     [progressTimerViewMinutes setTheme:theme];
     [progressTimerViewMinutes setPosition:1];
+    [progressTimerViewMinutes setCircleRadius:minutesCircleRadius];
+    [progressTimerViewMinutes setOuterCircleRadius:circleRadius];
     progressTimerViewMinutes.tag = 222;
 
     [self.dcImage addSubview:progressTimerViewMinutes];
@@ -350,6 +372,28 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 %new - (void)drawProgressBarHoursLeft:(NSInteger)hours
 {
+    if(theme==2.0)
+    {
+        for (UIView * subView in [self.dcImage subviews]) 
+        {
+            if ([subView isKindOfClass:[CircularProgressTimer class]]) 
+            {
+                if(subView.tag==111 || refreshView)
+                    [subView removeFromSuperview];
+                else
+                    if(subView.tag==222 && drawMinutes)
+                        [subView removeFromSuperview];
+                else
+                    if(subView.tag==333 && drawHours)
+                        [subView removeFromSuperview];
+            }
+            else if([subView isKindOfClass:[HexClock class]])
+            {
+                [subView removeFromSuperview];
+            }
+        }
+    }
+
     CGRect progressBarFrame = self.dcImage.frame;
     progressTimerViewHours = [[%c(CircularProgressTimer) alloc] initWithFrame:progressBarFrame];
     [progressTimerViewHours setCenter:self.dcImage.center];
@@ -363,6 +407,10 @@ static UIColor* parseColorFromPreferences(NSString* string) {
     [progressTimerViewHours setMarginWidth:hoursBGWidth];
     [progressTimerViewHours setTheme:theme];
     [progressTimerViewHours setPosition:2];
+    [progressTimerViewHours setCircleRadius:hoursCircleRadius];
+    [progressTimerViewHours setDrawCircle:drawCircle];
+    [progressTimerViewHours setOuterCircleRadius:circleRadius];
+    [progressTimerViewHours setOuterCircleColor:circleBackgroundColor];
     progressTimerViewHours.tag = 333;
 
     [self.dcImage addSubview:progressTimerViewHours];
@@ -372,9 +420,10 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 %new - (void)drawHexView:(NSInteger)seconds minutes:(NSInteger)minutes hours:(NSInteger)hours
 {
-    for (UIView * subView in [self.dcImage subviews]) 
+    self.dcImage.image  = nil;
+    for (UIView * subView in [self.dcImage subviews])
     {
-        if ([subView isKindOfClass:[HexClock class]]) 
+        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]]) 
         {
                 [subView removeFromSuperview];
         }
@@ -460,13 +509,24 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 			minutesCache = minutes;
 		}
 	  	
-        if(theme < 2.0)
+        if(theme < 3.0)
         {
-    	  	[self drawProgressBarSecondsLeft:seconds];
-    	    if(drawMinutes || refreshView)[self drawProgressBarMinutesLeft:minutes];
-    	    if(drawHours || refreshView)[self drawProgressBarHoursLeft:hours];
-    	    refreshView = NO;
-        }else if(theme==2.0)
+            if(theme==0.0 || theme==1.0)
+            {
+                [self drawProgressBarSecondsLeft:seconds];
+                if(drawMinutes || refreshView)[self drawProgressBarMinutesLeft:minutes];
+                if(drawHours || refreshView)[self drawProgressBarHoursLeft:hours];
+                refreshView = NO;
+            }
+            else
+            {
+                if(drawHours || refreshView)[self drawProgressBarHoursLeft:hours];
+                if(drawMinutes || refreshView)[self drawProgressBarMinutesLeft:minutes];
+                [self drawProgressBarSecondsLeft:seconds];
+                refreshView = NO;
+            }
+
+        }else if(theme==3.0)
         {
             [self drawHexView:seconds minutes:minutes hours:[components hour]];
             [self applyMask];
@@ -485,19 +545,83 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 -(void)updateAnimatingState
 {
+    NSLog(@"updateAnimatingState");
 	%orig;
 
 	if (enableTweak)
 	{
+        if([self getDefaultIconImage] == nil)
+        {
+            [self saveDefaultIconImage:[self contentsImage]];
+        }
+
+        CALayer * blackDot = MSHookIvar<CALayer*>(self,"_blackDot");
+        blackDot.opacity = 0;
+        CALayer * hours = MSHookIvar<CALayer*>(self,"_hours");
+        hours.opacity = 0;
+        CALayer * minutes = MSHookIvar<CALayer*>(self,"_minutes");
+        minutes.opacity = 0;
+        CALayer * redDot = MSHookIvar<CALayer*>(self,"_redDot");
+        redDot.opacity = 0;
+        CALayer * seconds = MSHookIvar<CALayer*>(self,"_seconds");
+        seconds.opacity = 0;
+
+        [self _setContentImage:nil];
 		[self _setAnimating:0];
 		[self.dcImage setHidden:0];
         [self redrawBackground];
+
 	}
 	else
 	{
+        if([self getDefaultIconImage] != nil)
+        {
+            NSLog(@"Saved image is not nil.");
+            [self _setContentImage:[self getDefaultIconImage]];
+        }
+
+        CALayer * blackDot = MSHookIvar<CALayer*>(self,"_blackDot");
+        blackDot.opacity = 1;
+        CALayer * hours = MSHookIvar<CALayer*>(self,"_hours");
+        hours.opacity = 1;
+        CALayer * minutes = MSHookIvar<CALayer*>(self,"_minutes");
+        minutes.opacity = 1;
+        CALayer * redDot = MSHookIvar<CALayer*>(self,"_redDot");
+        redDot.opacity = 1;
+        CALayer * seconds = MSHookIvar<CALayer*>(self,"_seconds");
+        seconds.opacity = 1;
+
 		[self _setAnimating:1];
 		[self.dcImage setHidden:1];
 	}
+}
+
+-(id)contentsImage{
+    id orig = %orig;
+    NSLog(@"_contentsImage: %@",orig);
+
+    if(orig != nil)
+        [self saveDefaultIconImage:orig];
+    return orig;
+}
+
+%new - (UIImage*)getDefaultIconImage
+{
+    NSLog(@"[Circulate]Retrieving backup image.");
+    NSBundle *bundle = [[[NSBundle alloc] initWithPath:kBundlePath] autorelease];
+    NSString *imagePath = [bundle pathForResource:@"defaultIconImage" ofType:@"png"];
+    UIImage *image = [UIImage imageWithContentsOfFile:imagePath];
+    NSLog(@"Retrieved Image: %@",image);
+    return image;
+}
+
+%new - (void)saveDefaultIconImage:(UIImage*)image
+{
+    NSLog(@"[Circulate]Saving backup image.");
+    NSBundle *bundle = [[[NSBundle alloc] initWithPath:kBundlePath] autorelease];
+    NSString * direc = [bundle resourcePath];
+    NSString * savePath = [NSString stringWithFormat:@"%@%@",direc,@"/defaultIconImage.png"];
+    [UIImagePNGRepresentation(image) writeToFile:savePath atomically:YES];
 }
 
 %end
@@ -562,6 +686,13 @@ static void loadPrefs()
     if(temp!=enable24hr)
         refreshView = YES;
 
+    temp = drawCircle;
+
+    drawCircle = !CFPreferencesCopyAppValue(CFSTR("drawCircle"), CFSTR("com.joshdoctors.circulate")) ? YES : [(id)CFPreferencesCopyAppValue(CFSTR("drawCircle"), CFSTR("com.joshdoctors.circulate")) boolValue];
+
+    if(temp!=drawCircle)
+    	refreshView = YES;
+
     temp = useStaticBackground;
 
     useStaticBackground = !CFPreferencesCopyAppValue(CFSTR("useStaticBackground"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("useStaticBackground"), CFSTR("com.joshdoctors.circulate")) boolValue];
@@ -596,7 +727,14 @@ static void loadPrefs()
      if(temp!=drawGuideH)
     	refreshView = YES;
 
-    UIColor * tempC = firstColor;
+    UIColor * tempC = circleBackgroundColor;
+
+    circleBackgroundColor = !CFPreferencesCopyAppValue(CFSTR("circleBackgroundColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultWhiteColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("circleBackgroundColor"), CFSTR("com.joshdoctors.circulate")));
+    
+    if(![tempC isEqual:circleBackgroundColor])
+        refreshView = YES;
+
+    tempC = firstColor;
 
     firstColor = !CFPreferencesCopyAppValue(CFSTR("firstColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultBlackColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("firstColor"), CFSTR("com.joshdoctors.circulate")));
     
@@ -690,6 +828,15 @@ static void loadPrefs()
 
      if(tempV!=secondsBGWidth)
     	refreshView = YES;
+
+    tempV = secondsCircleRadius;
+
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("secondsCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"4";
+    secondsCircleRadius = isNumeric(tempS) ? [tempS intValue] : 10;
+
+     if(tempV!=secondsCircleRadius)
+    	refreshView = YES;
+
 /////////////Values for our Seconds Integer Options/////////////////
 
 /////////////Values for our Minutes Integer Options/////////////////
@@ -725,6 +872,15 @@ static void loadPrefs()
 
      if(tempV!=minutesBGWidth)
     	refreshView = YES;
+
+    tempV = minutesCircleRadius;
+
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("minutesCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"5";
+    minutesCircleRadius = isNumeric(tempS) ? [tempS intValue] : 15;
+
+     if(tempV!=minutesCircleRadius)
+    	refreshView = YES;
+
 /////////////Values for our Minutes Integer Options/////////////////
 
 /////////////Values for our Hours Integer Options/////////////////
@@ -761,7 +917,25 @@ static void loadPrefs()
      if(tempV!=hoursBGWidth)
     	refreshView = YES;
 
+    tempV = hoursCircleRadius;
+
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("hoursCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"6";
+    hoursCircleRadius = isNumeric(tempS) ? [tempS intValue] : 20;
+
+     if(tempV!=hoursCircleRadius)
+    	refreshView = YES;
+
 /////////////Values for our Hours Integer Options/////////////////
+
+/////////////Values for our Solar Theme Global Integer Options/////////////////
+
+    tempV = circleRadius;
+
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("circleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"20";
+    circleRadius = isNumeric(tempS) ? [tempS intValue] : 55;
+
+     if(tempV!=circleRadius)
+    	refreshView = YES;
 }
 
 %hook SBClockApplicationIcon

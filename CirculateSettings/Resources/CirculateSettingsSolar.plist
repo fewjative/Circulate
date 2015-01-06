@@ -65,20 +65,60 @@
 			<string>themeList</string>
 		</dict>
 		<dict>
-			<key>PostNotification</key>
-			<string>com.joshdoctors.circulate/settingschanged</string>
 			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<false/>
-			<key>defaults</key>
-			<string>com.joshdoctors.circulate</string>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SecondsSettingsListController</string>
+			<key>icon</key>
+			<string>seconds@2x.png</string>
+			<key>isController</key>
+			<true/>
 			<key>key</key>
-			<string>hexTime</string>
+			<string>SecondsSettings</string>
 			<key>label</key>
-			<string>Time in Hex format?</string>
-			<key>id</key>
-			<string>hexTimeSwitch</string>
+			<string>Seconds Options</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>MinutesSettingsListController</string>
+			<key>icon</key>
+			<string>minutes@2x.png</string>
+			<key>isController</key>
+			<true/>
+			<key>key</key>
+			<string>MinutesSettings</string>
+			<key>label</key>
+			<string>Minutes Options</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>HoursSettingsListController</string>
+			<key>icon</key>
+			<string>hours@2x.png</string>
+			<key>isController</key>
+			<true/>
+			<key>key</key>
+			<string>HoursSettings</string>
+			<key>label</key>
+			<string>Hours Options</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>BackgroundSettingsListController</string>
+			<key>icon</key>
+			<string>backgroundicon@2x.png</string>
+			<key>isController</key>
+			<true/>
+			<key>key</key>
+			<string>BackgroundSettings</string>
+			<key>label</key>
+			<string>Background Options</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
@@ -86,16 +126,50 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
-			<false/>
+			<true/>
 			<key>defaults</key>
 			<string>com.joshdoctors.circulate</string>
 			<key>key</key>
-			<string>hexGradient</string>
+			<string>drawCircle</string>
 			<key>label</key>
-			<string>Slight Gradient?</string>
+			<string>Draw Outer Circle</string>
 			<key>id</key>
-			<string>hexGradientSwitch</string>
+			<string>drawCircleSwitch</string>
 		</dict>
+		<dict>
+            <key>cell</key>
+            <string>PSLinkCell</string>
+            <key>cellClass</key>
+            <string>PFColorCell</string>
+            <key>label</key>
+            <string>Outer Circle Color</string>
+            <key>color_defaults</key>
+            <string>com.joshdoctors.circulate</string>
+            <key>color_key</key>
+            <string>circleBackgroundColor</string>
+            <key>title</key>
+            <string>Outer Circle Color</string>
+            <key>color_fallback</key>
+            <string>#ffffff</string>
+            <key>usesRGB</key>
+            <true/>
+            <key>usesAlpha</key>
+            <true/>
+            <key>color_postNotification</key>
+            <string>com.joshdoctors.circulate/settingschanged</string>
+        </dict>
+		<dict>
+            <key>cell</key>             <string>PSEditTextCell</string>
+            <key>defaults</key>         <string>com.joshdoctors.circulate</string>
+            <key>key</key>              <string>circleRadius</string>
+            <key>label</key>            <string>Outer Circle Radius</string>
+            <key>PostNotification</key> <string>com.joshdoctors.circulate/settingschanged</string>
+        </dict>
+        <dict>
+            <key>cell</key>             <string>PSButtonCell</string>
+            <key>label</key>            <string>Save</string>
+            <key>action</key>           <string>save</string>
+        </dict>
 		<dict>
             <key>cell</key>
             <string>PSButtonCell</string>

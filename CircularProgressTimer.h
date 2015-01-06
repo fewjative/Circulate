@@ -26,4 +26,8 @@
 @property (nonatomic) BOOL drawGuide;
 @property (nonatomic) CGFloat theme;
 @property (nonatomic) NSInteger position;
+@property (nonatomic) NSInteger circleRadius;
+@property (nonatomic) BOOL drawCircle;
+@property (nonatomic) NSInteger outerCircleRadius;
+@property (nonatomic) UIColor * outerCircleColor;
 @end

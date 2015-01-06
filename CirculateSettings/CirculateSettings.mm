@@ -20,9 +20,11 @@ static CGFloat theme = 0.0;
 
         theme = (!CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) floatValue]);
 
-        if(theme==2.0)
+        if(theme==3.0)
             _specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettingsHex" target:self] retain];    
-        else
+        else if(theme==2.0)
+        	  _specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettingsSolar" target:self] retain];
+        	else
             _specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettings" target:self] retain];
 
 	}
@@ -95,6 +97,13 @@ static CGFloat theme = 0.0;
             CFPreferencesSetAppValue(CFSTR("firstColor"), CFSTR("#000000:1.000000"), CFSTR("com.joshdoctors.circulate"));
             CFPreferencesSetAppValue(CFSTR("secondColor"), CFSTR("#616161:1.000000"), CFSTR("com.joshdoctors.circulate"));
 
+            CFPreferencesSetAppValue(CFSTR("secondCircleRadius"), CFSTR("10"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("minutesCircleRadius"), CFSTR("15"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("hoursCircleRadius"), CFSTR("20"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("circleRadius"), CFSTR("55"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("drawCircle"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("circleBackgroundColor"), CFSTR("#FFFFFF:1.000000"), CFSTR("com.joshdoctors.circulate"));
+
     		CFPreferencesSetAppValue(CFSTR("drawGuideS"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("drawGuideM"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("drawGuideH"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
@@ -128,6 +137,9 @@ static CGFloat theme = 0.0;
     			NULL,
     			YES
     			);
+
+    		[self reload];
+			[self reloadSpecifiers];
     	}
     }
 }
@@ -179,6 +191,8 @@ static CGFloat theme = 0.0;
 			_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettingsCircles" target:self] retain];    
 		else if(theme==1.0)
 			_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettingsBars" target:self] retain];
+		else if(theme==2.0)
+			_specifiers = [[self loadSpecifiersFromPlistName:@"SecondsSettingsSolar" target:self] retain];
 	}
 	return _specifiers;
 
@@ -206,6 +220,8 @@ static CGFloat theme = 0.0;
 			_specifiers = [[self loadSpecifiersFromPlistName:@"MinutesSettingsCircles" target:self] retain];
 		else if(theme==1.0)
 			_specifiers = [[self loadSpecifiersFromPlistName:@"MinutesSettingsBars" target:self] retain];
+		else if(theme==2.0)
+			_specifiers = [[self loadSpecifiersFromPlistName:@"MinutesSettingsSolar" target:self] retain];
 	}
 	return _specifiers;
 
@@ -232,6 +248,8 @@ static CGFloat theme = 0.0;
 			_specifiers = [[self loadSpecifiersFromPlistName:@"HoursSettingsCircles" target:self] retain];
 		else if(theme==1.0)
 			_specifiers = [[self loadSpecifiersFromPlistName:@"HoursSettingsBars" target:self] retain];
+		else if(theme==2.0)
+			_specifiers = [[self loadSpecifiersFromPlistName:@"HoursSettingsSolar" target:self] retain];
 	}
 	return _specifiers;
 

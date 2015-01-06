@@ -84,6 +84,40 @@
         [self.instanceColor setFill];
         [barPath fill];
     }
+    else if(_theme==2.0)
+    {
+       CGPoint center;
+       center.x = rect.origin.x + rect.size.width/2;
+       center.y = rect.origin.y + rect.size.height/2;
+       CGContextRef ctx = UIGraphicsGetCurrentContext();
+       CGContextSaveGState(ctx);
+
+        if(self.position==2)
+        {
+            if(_drawCircle)
+            {
+               CGContextSetLineWidth(ctx, 1.0);
+               CGContextSetStrokeColorWithColor(ctx, _outerCircleColor.CGColor);
+               CGRect circle = CGRectMake(center.x-_outerCircleRadius/2.0,center.y-_outerCircleRadius/2.0,_outerCircleRadius,_outerCircleRadius);
+               CGContextAddEllipseInRect(ctx,circle);
+               CGContextStrokePath(ctx);
+            }
+        }
+
+       float timeAsRadians = (float)_percent/60.0 * 2.0 * M_PI - M_PI_2;
+
+       CGPoint newCenter;
+
+       newCenter.x = center.x + _outerCircleRadius/2.0 * cos(timeAsRadians);
+       newCenter.y = center.y + _outerCircleRadius/2.0 * sin(timeAsRadians);
+
+       CGContextSetFillColor(ctx, CGColorGetComponents(_instanceColor.CGColor));
+       CGRect circle = CGRectMake(newCenter.x-_circleRadius/2.0,newCenter.y-_circleRadius/2.0,_circleRadius,_circleRadius);
+       CGContextAddEllipseInRect(ctx,circle);
+       CGContextFillPath(ctx);
+
+       CGContextRestoreGState(ctx);
+    }
 }
 
 - (void)setup
