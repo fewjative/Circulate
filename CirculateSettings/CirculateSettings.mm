@@ -100,7 +100,7 @@ static CGFloat theme = 0.0;
             CFPreferencesSetAppValue(CFSTR("secondCircleRadius"), CFSTR("10"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("minutesCircleRadius"), CFSTR("15"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("hoursCircleRadius"), CFSTR("20"), CFSTR("com.joshdoctors.circulate"));
-    		CFPreferencesSetAppValue(CFSTR("circleRadius"), CFSTR("55"), CFSTR("com.joshdoctors.circulate"));
+    		CFPreferencesSetAppValue(CFSTR("circleRadius"), CFSTR("35"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("drawCircle"), CFSTR("1"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("circleBackgroundColor"), CFSTR("#FFFFFF:1.000000"), CFSTR("com.joshdoctors.circulate"));
 

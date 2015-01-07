@@ -6,6 +6,7 @@
 #import <HexClock.m>
 
 #define kBundlePath @"/Library/PreferenceBundles/CirculateSettings.bundle"
+#define kBundle [NSBundle bundleWithPath:@"/Library/PreferenceBundles/CirculateSettings.bundle"]
 #define SYS_VER_GREAT_OR_EQUAL(v) ([[[UIDevice currentDevice] systemVersion] compare:v options:64] != NSOrderedAscending)
 #define kDefaultWhiteColor [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1.0f]
 #define kDefaultGrayColor [[UIColor alloc] initWithRed:97/255.0f green:97/255.0f blue:97/255.0f alpha:1.00f]
@@ -60,7 +61,7 @@ static BOOL drawGuideM = true;
 static BOOL drawGuideH = true;
 static BOOL refreshView = false;
 static BOOL drawCircle = true;
-static NSInteger circleRadius = 55;
+static NSInteger circleRadius = 35;
 static UIColor * circleBackgroundColor;
 
 static UIColor *secondsColor;
@@ -545,13 +546,15 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 -(void)updateAnimatingState
 {
-    NSLog(@"updateAnimatingState");
 	%orig;
 
 	if (enableTweak)
 	{
+		NSLog(@"[Circulate]UAS Enabled");
+
         if([self getDefaultIconImage] == nil)
         {
+        	NSLog(@"[Circulate]Stored image is nil. Attempting to store new image.");
             [self saveDefaultIconImage:[self contentsImage]];
         }
 
@@ -570,13 +573,14 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 		[self _setAnimating:0];
 		[self.dcImage setHidden:0];
         [self redrawBackground];
-
 	}
 	else
 	{
+		NSLog(@"[Circulate]UAS Disabled");
+
         if([self getDefaultIconImage] != nil)
         {
-            NSLog(@"Saved image is not nil.");
+        	NSLog(@"[Circulate]Stored image is valid, set the icon to the stored image.");
             [self _setContentImage:[self getDefaultIconImage]];
         }
 
@@ -598,19 +602,19 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 -(id)contentsImage{
     id orig = %orig;
-    NSLog(@"_contentsImage: %@",orig);
 
     if(orig != nil)
+    {
+    	NSLog(@"[Circulate]Valid content image");
         [self saveDefaultIconImage:orig];
+    }
     return orig;
 }
 
 %new - (UIImage*)getDefaultIconImage
 {
     NSLog(@"[Circulate]Retrieving backup image.");
-    NSBundle *bundle = [[[NSBundle alloc] initWithPath:kBundlePath] autorelease];
-    NSString *imagePath = [bundle pathForResource:@"defaultIconImage" ofType:@"png"];
-    UIImage *image = [UIImage imageWithContentsOfFile:imagePath];
+    UIImage *image = [UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"/var/mobile/Library/Circulate/defaulticonimage.png"]];
     NSLog(@"Retrieved Image: %@",image);
     return image;
 }
@@ -618,9 +622,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 %new - (void)saveDefaultIconImage:(UIImage*)image
 {
     NSLog(@"[Circulate]Saving backup image.");
-    NSBundle *bundle = [[[NSBundle alloc] initWithPath:kBundlePath] autorelease];
-    NSString * direc = [bundle resourcePath];
-    NSString * savePath = [NSString stringWithFormat:@"%@%@",direc,@"/defaultIconImage.png"];
+    NSString * savePath = [NSString stringWithFormat:@"/var/mobile/Library/Circulate/defaulticonimage.png"];
     [UIImagePNGRepresentation(image) writeToFile:savePath atomically:YES];
 }
 
@@ -831,7 +833,7 @@ static void loadPrefs()
 
     tempV = secondsCircleRadius;
 
-    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("secondsCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"4";
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("secondsCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"10";
     secondsCircleRadius = isNumeric(tempS) ? [tempS intValue] : 10;
 
      if(tempV!=secondsCircleRadius)
@@ -875,7 +877,7 @@ static void loadPrefs()
 
     tempV = minutesCircleRadius;
 
-    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("minutesCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"5";
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("minutesCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"15";
     minutesCircleRadius = isNumeric(tempS) ? [tempS intValue] : 15;
 
      if(tempV!=minutesCircleRadius)
@@ -919,7 +921,7 @@ static void loadPrefs()
 
     tempV = hoursCircleRadius;
 
-    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("hoursCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"6";
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("hoursCircleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"20";
     hoursCircleRadius = isNumeric(tempS) ? [tempS intValue] : 20;
 
      if(tempV!=hoursCircleRadius)
@@ -931,8 +933,8 @@ static void loadPrefs()
 
     tempV = circleRadius;
 
-    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("circleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"20";
-    circleRadius = isNumeric(tempS) ? [tempS intValue] : 55;
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("circleRadius"), CFSTR("com.joshdoctors.circulate")) ?: @"35";
+    circleRadius = isNumeric(tempS) ? [tempS intValue] : 35;
 
      if(tempV!=circleRadius)
     	refreshView = YES;
@@ -950,6 +952,16 @@ static void loadPrefs()
 %ctor
 {
 	NSLog(@"[Circulate]Loading Circulate");
+
+	NSString * circulatePath = @"/var/mobile/Library/";
+	NSString * folderName = [circulatePath stringByAppendingPathComponent:@"Circulate"];
+	NSFileManager * fileManager = [NSFileManager defaultManager];
+	NSError * error = nil;
+
+	if(![fileManager fileExistsAtPath:folderName]){
+		[fileManager createDirectoryAtPath:folderName withIntermediateDirectories:YES attributes:nil error:&error];
+	}
+
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
                                 NULL,
                                 (CFNotificationCallback)loadPrefs,

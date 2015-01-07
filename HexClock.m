@@ -41,11 +41,6 @@ static UIColor * lighterColor(UIColor * c){
 {
     CGRect textRect = CGRectMake(0,_yOffset,rect.size.width,_fontHeight);
 
-    NSLog(@"font: %@",_font);
-    NSLog(@"fontheight: %ld",(long)_fontHeight);
-    NSLog(@"yOFF: %ld",(long)_yOffset);
-    NSLog(@"textRect: %@",NSStringFromCGRect(textRect));
-
     NSString *hStr;
     NSString *mStr;
     NSString *sStr;

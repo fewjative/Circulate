@@ -186,6 +186,14 @@
             <key>footerAlignment</key>
             <integer>1</integer>
             <key>footerText</key>
+            <string>Default Outer Circle Radius is 35.</string>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+            <key>footerAlignment</key>
+            <integer>1</integer>
+            <key>footerText</key>
             <string>When setting a color, don't forget to change the alpha slider(the slider with the letter 'A').</string>
         </dict>
 		<dict>
