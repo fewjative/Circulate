@@ -53,6 +53,7 @@
  				<string>Rising Bars</string>
  				<string>Solar</string>
  				<string>Hex</string>
+ 				<string>Simple Text</string>
  			</array>
  			<key>validValues</key>
  			<array>
@@ -60,6 +61,7 @@
  				<real>1</real>
  				<real>2</real>
  				<real>3</real>
+ 				<real>4</real>
  			</array>
  			<key>id</key>
 			<string>themeList</string>

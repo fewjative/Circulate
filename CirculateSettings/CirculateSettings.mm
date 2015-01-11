@@ -20,7 +20,9 @@ static CGFloat theme = 0.0;
 
         theme = (!CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) ? 0.0 : [(id)CFPreferencesCopyAppValue(CFSTR("theme"), CFSTR("com.joshdoctors.circulate")) floatValue]);
 
-        if(theme==3.0)
+        if(theme==4.0)
+            _specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettingsStandard" target:self] retain];
+        else if(theme==3.0)
             _specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettingsHex" target:self] retain];    
         else if(theme==2.0)
         	  _specifiers = [[self loadSpecifiersFromPlistName:@"CirculateSettingsSolar" target:self] retain];
@@ -88,6 +90,9 @@ static CGFloat theme = 0.0;
             PSSpecifier * bspec = [self specifierForID:@"useStaticBackgroundSwitch"];
             [self setPreferenceValue:@(YES) specifier:bspec];
             [self reloadSpecifier:bspec animated:NO];
+
+            CFPreferencesSetAppValue(CFSTR("includeSeconds"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));
+            CFPreferencesSetAppValue(CFSTR("standardTextColor"), CFSTR("#FFFFFF:1.000000"), CFSTR("com.joshdoctors.circulate"));
 
             CFPreferencesSetAppValue(CFSTR("hexTime"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));
     		CFPreferencesSetAppValue(CFSTR("hexGradient"), CFSTR("0"), CFSTR("com.joshdoctors.circulate"));

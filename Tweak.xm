@@ -4,6 +4,7 @@
 #import <substrate.h>
 #import <CircularProgressTimer.m>
 #import <HexClock.m>
+#import <StandardTextClock.m>
 
 #define kBundlePath @"/Library/PreferenceBundles/CirculateSettings.bundle"
 #define kBundle [NSBundle bundleWithPath:@"/Library/PreferenceBundles/CirculateSettings.bundle"]
@@ -56,11 +57,14 @@ static CircularProgressTimer * progressTimerViewHours;
 
 static HexClock * hexClockView;
 
+static StandardTextClock * standardTextView;
+
 static NSInteger minutesCache = -1;
 static NSInteger hoursCache = -1;
 static BOOL enableTweak = NO;
 static CGFloat theme = 0.0;
 static BOOL enable24hr = NO;
+static BOOL includeSeconds = NO;
 static BOOL drawHours = false;
 static BOOL drawMinutes = false;
 static BOOL drawGuideS = true;
@@ -70,6 +74,7 @@ static BOOL refreshView = false;
 static BOOL drawCircle = true;
 static NSInteger circleRadius = 35;
 static UIColor * circleBackgroundColor;
+static UIColor * standardTextColor;
 
 static UIColor *secondsColor;
 static NSInteger secondsRadius;
@@ -222,7 +227,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 %new - (void)redrawBackground
 {
-    if(redrawBackground && theme < 3.0)
+    if(redrawBackground && (theme < 3.0 || theme == 4.0))
     {
         NSLog(@"Redrawing Background");
 
@@ -364,6 +369,10 @@ return YES;
             {
                 [subView removeFromSuperview];
             }
+            else if([subView isKindOfClass:[StandardTextClock class]])
+            {
+            	[subView removeFromSuperview];
+            }
         }
     }
 
@@ -435,6 +444,10 @@ return YES;
             {
                 [subView removeFromSuperview];
             }
+            else if([subView isKindOfClass:[StandardTextClock class]])
+            {
+            	[subView removeFromSuperview];
+            }
         }
     }
 
@@ -467,7 +480,7 @@ return YES;
     self.dcImage.image  = nil;
     for (UIView * subView in [self.dcImage subviews])
     {
-        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]]) 
+        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]] || [subView isKindOfClass:[StandardTextClock class]]) 
         {
                 [subView removeFromSuperview];
         }
@@ -486,6 +499,33 @@ return YES;
     [self.dcImage addSubview:hexClockView];
     [hexClockView release];
     hexClockView = nil;
+}
+
+%new - (void)drawStandardTextView:(NSInteger)seconds minutes:(NSInteger)minutes hours:(NSInteger)hours
+{
+    //self.dcImage.image  = nil;
+    for (UIView * subView in [self.dcImage subviews])
+    {
+        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]] || [subView isKindOfClass:[StandardTextClock class]]) 
+        {
+                [subView removeFromSuperview];
+        }
+    }
+
+    CGRect progressBarFrame = self.dcImage.frame;
+    standardTextView = [[%c(StandardTextClock) alloc] initWithFrame:progressBarFrame];
+    [standardTextView setSeconds:seconds];
+    [standardTextView setMinutes:minutes];
+    [standardTextView setHours:hours];
+    [standardTextView setEnable24hr:enable24hr];
+    [standardTextView setIncludeSeconds:includeSeconds];
+    [standardTextView setTextColor:standardTextColor];
+
+    standardTextView.tag = 555;
+
+    [self.dcImage addSubview:standardTextView];
+    [standardTextView release];
+    standardTextView = nil;
 }
 
 -(id)initWithFrame:(CGRect)frame
@@ -573,6 +613,11 @@ return YES;
         }else if(theme==3.0)
         {
             [self drawHexView:seconds minutes:minutes hours:[components hour]];
+            [self applyMask];
+        }
+        else if(theme==4.0)
+        {
+        	[self drawStandardTextView:seconds minutes:minutes hours:[components hour]];
             [self applyMask];
         }
 	}
@@ -733,6 +778,10 @@ static void loadPrefs()
     if(temp!=enable24hr)
         refreshView = YES;
 
+    includeSeconds = !CFPreferencesCopyAppValue(CFSTR("includeSeconds"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("includeSeconds"), CFSTR("com.joshdoctors.circulate")) boolValue];
+
+    //don't care about refreshing view for HexClock/StandardTextClock
+
     temp = drawCircle;
 
     drawCircle = !CFPreferencesCopyAppValue(CFSTR("drawCircle"), CFSTR("com.joshdoctors.circulate")) ? YES : [(id)CFPreferencesCopyAppValue(CFSTR("drawCircle"), CFSTR("com.joshdoctors.circulate")) boolValue];
@@ -751,6 +800,7 @@ static void loadPrefs()
     }
 
     hexTime = !CFPreferencesCopyAppValue(CFSTR("hexTime"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("hexTime"), CFSTR("com.joshdoctors.circulate")) boolValue];
+    
     hexGradient = !CFPreferencesCopyAppValue(CFSTR("hexGradient"), CFSTR("com.joshdoctors.circulate")) ? NO : [(id)CFPreferencesCopyAppValue(CFSTR("hexGradient"), CFSTR("com.joshdoctors.circulate")) boolValue];
     
     temp = drawGuideS;
@@ -781,6 +831,8 @@ static void loadPrefs()
     if(![tempC isEqual:circleBackgroundColor])
         refreshView = YES;
 
+    standardTextColor = !CFPreferencesCopyAppValue(CFSTR("standardTextColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultWhiteColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("standardTextColor"), CFSTR("com.joshdoctors.circulate")));
+    
     tempC = firstColor;
 
     firstColor = !CFPreferencesCopyAppValue(CFSTR("firstColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultBlackColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("firstColor"), CFSTR("com.joshdoctors.circulate")));
