@@ -42,6 +42,13 @@
 @implementation SBClockApplicationIconImageView : SBLiveIconImageView
 @end
 
+@interface SBLockScreenManager : NSObject
++ (id)sharedInstance;
+- (BOOL)isUILocked;
+- (void)unlockUIFromSource:(NSInteger)source withOptions:(id)options;
+- (void)_finishUIUnlockFromSource:(NSInteger)source withOptions:(id)options;
+@end
+
 static NSTimer * timer;
 static CircularProgressTimer * progressTimerViewSeconds;
 static CircularProgressTimer * progressTimerViewMinutes;
@@ -261,21 +268,57 @@ static UIColor* parseColorFromPreferences(NSString* string) {
             }
         }
 
-        CALayer * mask = [CALayer layer];
-        UIImage * imgMask = [self _iconBasicOverlayImage];
-        mask.contents = (id)[imgMask CGImage];
-        mask.frame = CGRectMake(0,0,imgMask.size.width,imgMask.size.height);
-        self.dcImage.layer.mask = mask;
-        self.dcImage.layer.masksToBounds = YES;
+        [self applyMask];
         redrawBackground = NO;
         NSLog(@"Finished Drawing Background");
     }
+}
+
+%new -(BOOL)isBlankImage:(UIImage *)myImage
+{
+	typedef struct
+	{
+	    uint8_t red;
+	    uint8_t green;
+	    uint8_t blue;
+	    uint8_t alpha;
+	} MyPixel_T;
+
+	CGImageRef myCGImage = [myImage CGImage];
+
+	//Get a bitmap context for the image
+	CGContextRef bitmapContext = CGBitmapContextCreate(NULL, CGImageGetWidth(myCGImage), CGImageGetHeight(myCGImage),
+	                      CGImageGetBitsPerComponent(myCGImage), CGImageGetBytesPerRow(myCGImage),
+	                      CGImageGetColorSpace(myCGImage), CGImageGetBitmapInfo(myCGImage));
+
+	//Draw the image into the context
+	CGContextDrawImage(bitmapContext, CGRectMake(0, 0, CGImageGetWidth(myCGImage), CGImageGetHeight(myCGImage)), myCGImage);
+
+	//Get pixel data for the image
+	MyPixel_T *pixels = (MyPixel_T*)CGBitmapContextGetData(bitmapContext);
+	size_t pixelCount = CGImageGetWidth(myCGImage) * CGImageGetHeight(myCGImage);
+	for(size_t i = 0; i < pixelCount; i++)
+	{
+	    MyPixel_T p = pixels[i];
+	    //Your definition of what's blank may differ from mine
+	    if(p.red > 0 || p.green > 0 || p.blue > 0 || p.alpha > 0)
+	        return NO;
+	}
+
+return YES;
 }
 
 %new - (void)applyMask
 {
     CALayer * mask = [CALayer layer];
     UIImage * imgMask = [self _iconBasicOverlayImage];
+
+    if([self isBlankImage:imgMask])
+    {
+    	NSLog(@"[Circulate]AppIconMask is blank");
+    	return;
+    }
+
     mask.contents = (id)[imgMask CGImage];
     mask.frame = CGRectMake(0,0,imgMask.size.width,imgMask.size.height);
     self.dcImage.layer.mask = mask;
@@ -548,7 +591,9 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 {
 	%orig;
 
-	if (enableTweak)
+	SBLockScreenManager *lockscreenManager = (SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance];
+
+	if (enableTweak && !lockscreenManager.isUILocked)
 	{
 		NSLog(@"[Circulate]UAS Enabled");
 
