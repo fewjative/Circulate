@@ -22,7 +22,7 @@
 
     _font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:_size];
     _fontHeight = _font.pointSize;
-    _yOffset = (rect.size.height - _fontHeight)/2.0;
+    _yOffset = (rect.size.height - _fontHeight)/2.2;
 
     CGRect textRect = CGRectMake(0,_yOffset,rect.size.width,_fontHeight);
 
@@ -66,6 +66,8 @@
         timeString = [NSString stringWithFormat:@"%@:%@",hStr,mStr];
 
     [timeString drawInRect:textRect withAttributes:stringAttrs];
+    [textStyle release];
+    textStyle = nil;
 }
 
 @end

@@ -54,6 +54,7 @@
  				<string>Solar</string>
  				<string>Hex</string>
  				<string>Simple Text</string>
+ 				<string>Cataracs</string>
  			</array>
  			<key>validValues</key>
  			<array>
@@ -62,6 +63,7 @@
  				<real>2</real>
  				<real>3</real>
  				<real>4</real>
+ 				<real>5</real>
  			</array>
  			<key>id</key>
 			<string>themeList</string>

@@ -5,6 +5,7 @@
 #import <CircularProgressTimer.m>
 #import <HexClock.m>
 #import <StandardTextClock.m>
+#import <CataracsClock.m>
 
 #define kBundlePath @"/Library/PreferenceBundles/CirculateSettings.bundle"
 #define kBundle [NSBundle bundleWithPath:@"/Library/PreferenceBundles/CirculateSettings.bundle"]
@@ -58,6 +59,8 @@ static CircularProgressTimer * progressTimerViewHours;
 static HexClock * hexClockView;
 
 static StandardTextClock * standardTextView;
+
+static CataracsClock * cataracsClockView;
 
 static NSInteger minutesCache = -1;
 static NSInteger hoursCache = -1;
@@ -113,6 +116,13 @@ static BOOL hexTime = NO;
 static BOOL hexGradient = NO;
 
 static bool hasAdjusted = NO;
+
+static CGFloat cataracsWidth = 1.0;
+static BOOL cataracsBoldHours = YES;
+static BOOL cataracsIsVertical =  YES;
+static NSString * cataracsSeparator = @".";
+static UIColor * cataracsFontColor;
+static UIColor * cataracsBoxColor;
 
 static UIImage * defaultIconImage = nil;
 static bool hasDefaultIconImage = NO;
@@ -227,7 +237,7 @@ static UIColor* parseColorFromPreferences(NSString* string) {
 
 %new - (void)redrawBackground
 {
-    if(redrawBackground && (theme < 3.0 || theme == 4.0))
+    if(redrawBackground && (theme < 3.0 || theme == 4.0 || theme == 5.0))
     {
         NSLog(@"Redrawing Background");
 
@@ -373,6 +383,10 @@ return YES;
             {
             	[subView removeFromSuperview];
             }
+            else if([subView isKindOfClass:[CataracsClock class]])
+            {
+            	[subView removeFromSuperview];
+            }
         }
     }
 
@@ -448,6 +462,10 @@ return YES;
             {
             	[subView removeFromSuperview];
             }
+            else if([subView isKindOfClass:[CataracsClock class]])
+            {
+            	[subView removeFromSuperview];
+            }
         }
     }
 
@@ -480,7 +498,7 @@ return YES;
     self.dcImage.image  = nil;
     for (UIView * subView in [self.dcImage subviews])
     {
-        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]] || [subView isKindOfClass:[StandardTextClock class]]) 
+        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]] || [subView isKindOfClass:[StandardTextClock class]] || [subView isKindOfClass:[CataracsClock class]]) 
         {
                 [subView removeFromSuperview];
         }
@@ -506,7 +524,7 @@ return YES;
     //self.dcImage.image  = nil;
     for (UIView * subView in [self.dcImage subviews])
     {
-        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]] || [subView isKindOfClass:[StandardTextClock class]]) 
+        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]] || [subView isKindOfClass:[StandardTextClock class]] || [subView isKindOfClass:[CataracsClock class]]) 
         {
                 [subView removeFromSuperview];
         }
@@ -526,6 +544,37 @@ return YES;
     [self.dcImage addSubview:standardTextView];
     [standardTextView release];
     standardTextView = nil;
+}
+
+%new - (void)drawCataracsView:(NSInteger)minutes hours:(NSInteger)hours
+{
+    //self.dcImage.image  = nil;
+    for (UIView * subView in [self.dcImage subviews])
+    {
+        if ([subView isKindOfClass:[HexClock class]] || [subView isKindOfClass:[CircularProgressTimer class]] || [subView isKindOfClass:[StandardTextClock class]] || [subView isKindOfClass:[CataracsClock class]]) 
+        {
+                [subView removeFromSuperview];
+        }
+    }
+
+    CGRect progressBarFrame = self.dcImage.frame;
+    cataracsClockView = [[%c(CataracsClock) alloc] initWithFrame:progressBarFrame];
+    [cataracsClockView setMinutes:minutes];
+    [cataracsClockView setHours:hours];
+    [cataracsClockView setEnable24hr:enable24hr];
+    
+    [cataracsClockView setWidth:cataracsWidth];
+    [cataracsClockView setBoldHours:cataracsBoldHours];
+    [cataracsClockView setIsVertical:cataracsIsVertical];
+    [cataracsClockView setSeparator:cataracsSeparator];
+    [cataracsClockView setFontColor:cataracsFontColor];
+    [cataracsClockView setBoxColor:cataracsBoxColor];
+
+    cataracsClockView.tag = 666;
+
+    [self.dcImage addSubview:cataracsClockView];
+    [cataracsClockView release];
+    cataracsClockView = nil;
 }
 
 -(id)initWithFrame:(CGRect)frame
@@ -618,6 +667,11 @@ return YES;
         else if(theme==4.0)
         {
         	[self drawStandardTextView:seconds minutes:minutes hours:[components hour]];
+            [self applyMask];
+        }
+        else if(theme==5.0)
+        {
+        	[self drawCataracsView:minutes hours:[components hour]];
             [self applyMask];
         }
 	}
@@ -824,6 +878,9 @@ static void loadPrefs()
      if(temp!=drawGuideH)
     	refreshView = YES;
 
+    cataracsBoldHours  = !CFPreferencesCopyAppValue(CFSTR("cataracsBoldHours"), CFSTR("com.joshdoctors.circulate")) ? YES : [(id)CFPreferencesCopyAppValue(CFSTR("cataracsBoldHours"), CFSTR("com.joshdoctors.circulate")) boolValue];
+    cataracsIsVertical = !CFPreferencesCopyAppValue(CFSTR("cataracsIsVertical"), CFSTR("com.joshdoctors.circulate")) ? YES : [(id)CFPreferencesCopyAppValue(CFSTR("cataracsIsVertical"), CFSTR("com.joshdoctors.circulate")) boolValue];
+    
     UIColor * tempC = circleBackgroundColor;
 
     circleBackgroundColor = !CFPreferencesCopyAppValue(CFSTR("circleBackgroundColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultWhiteColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("circleBackgroundColor"), CFSTR("com.joshdoctors.circulate")));
@@ -894,6 +951,9 @@ static void loadPrefs()
 
     if(![tempC isEqual:hoursBGColor])
     	refreshView = YES;
+
+    cataracsFontColor  = !CFPreferencesCopyAppValue(CFSTR("cataracsFontColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultWhiteColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("cataracsFontColor"), CFSTR("com.joshdoctors.circulate")));
+    cataracsBoxColor  = !CFPreferencesCopyAppValue(CFSTR("cataracsBoxColor"), CFSTR("com.joshdoctors.circulate")) ? kDefaultWhiteColor : parseColorFromPreferences((id)CFPreferencesCopyAppValue(CFSTR("cataracsBoxColor"), CFSTR("com.joshdoctors.circulate")));
 
 /////////////Values for our Seconds Integer Options/////////////////
     NSInteger tempV = secondsRadius;
@@ -1035,6 +1095,13 @@ static void loadPrefs()
 
      if(tempV!=circleRadius)
     	refreshView = YES;
+
+/////////////Value for Cataracs(String)/////////////////
+
+    tempS = (NSString*)CFPreferencesCopyAppValue(CFSTR("cataracsWidth"), CFSTR("com.joshdoctors.circulate")) ?: @"1.0";
+    cataracsWidth = isNumeric(tempS) ? [tempS floatValue] : 1.0;
+
+    cataracsSeparator = (NSString*)CFPreferencesCopyAppValue(CFSTR("cataracsSeparator"), CFSTR("com.joshdoctors.circulate")) ?: @".";
 }
 
 %hook SBClockApplicationIcon

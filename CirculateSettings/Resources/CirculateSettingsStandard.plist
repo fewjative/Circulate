@@ -72,48 +72,6 @@
 			<key>cell</key>
 			<string>PSLinkCell</string>
 			<key>detail</key>
-			<string>SecondsSettingsListController</string>
-			<key>icon</key>
-			<string>seconds@2x.png</string>
-			<key>isController</key>
-			<true/>
-			<key>key</key>
-			<string>SecondsSettings</string>
-			<key>label</key>
-			<string>Seconds Options</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>detail</key>
-			<string>MinutesSettingsListController</string>
-			<key>icon</key>
-			<string>minutes@2x.png</string>
-			<key>isController</key>
-			<true/>
-			<key>key</key>
-			<string>MinutesSettings</string>
-			<key>label</key>
-			<string>Minutes Options</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>detail</key>
-			<string>HoursSettingsListController</string>
-			<key>icon</key>
-			<string>hours@2x.png</string>
-			<key>isController</key>
-			<true/>
-			<key>key</key>
-			<string>HoursSettings</string>
-			<key>label</key>
-			<string>Hours Options</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>detail</key>
 			<string>BackgroundSettingsListController</string>
 			<key>icon</key>
 			<string>backgroundicon@2x.png</string>
@@ -130,15 +88,15 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
-			<true/>
+			<false/>
 			<key>defaults</key>
 			<string>com.joshdoctors.circulate</string>
 			<key>key</key>
-			<string>drawCircle</string>
+			<string>includeSeconds</string>
 			<key>label</key>
-			<string>Draw Outer Circle</string>
+			<string>Include seconds?</string>
 			<key>id</key>
-			<string>drawCircleSwitch</string>
+			<string>includeSecondsSwitch</string>
 		</dict>
 		<dict>
             <key>cell</key>
@@ -146,13 +104,13 @@
             <key>cellClass</key>
             <string>PFColorCell</string>
             <key>label</key>
-            <string>Outer Circle Color</string>
+            <string>Text Color</string>
             <key>color_defaults</key>
             <string>com.joshdoctors.circulate</string>
             <key>color_key</key>
-            <string>circleBackgroundColor</string>
+            <string>standardTextColor</string>
             <key>title</key>
-            <string>Outer Circle Color</string>
+            <string>Text Color</string>
             <key>color_fallback</key>
             <string>#ffffff</string>
             <key>usesRGB</key>
@@ -161,19 +119,7 @@
             <true/>
             <key>color_postNotification</key>
             <string>com.joshdoctors.circulate/settingschanged</string>
-        </dict>
-		<dict>
-            <key>cell</key>             <string>PSEditTextCell</string>
-            <key>defaults</key>         <string>com.joshdoctors.circulate</string>
-            <key>key</key>              <string>circleRadius</string>
-            <key>label</key>            <string>Outer Circle Radius</string>
-            <key>PostNotification</key> <string>com.joshdoctors.circulate/settingschanged</string>
-        </dict>
-        <dict>
-            <key>cell</key>             <string>PSButtonCell</string>
-            <key>label</key>            <string>Save</string>
-            <key>action</key>           <string>save</string>
-        </dict>
+     	</dict>
 		<dict>
             <key>cell</key>
             <string>PSButtonCell</string>
@@ -183,14 +129,6 @@
             <string>resetSettings</string>
             <key>label</key>
             <string>Reset settings to default</string>
-        </dict>
-        <dict>
-            <key>cell</key>
-            <string>PSGroupCell</string>
-            <key>footerAlignment</key>
-            <integer>1</integer>
-            <key>footerText</key>
-            <string>Default Outer Circle Radius is 35.</string>
         </dict>
         <dict>
             <key>cell</key>

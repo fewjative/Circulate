@@ -39,6 +39,7 @@ static UIColor * lighterColor(UIColor * c){
 
 - (void)drawRect:(CGRect)rect
 {
+    NSLog(@"drawRect");
     CGRect textRect = CGRectMake(0,_yOffset,rect.size.width,_fontHeight);
 
     NSString *hStr;
@@ -130,11 +131,17 @@ static UIColor * lighterColor(UIColor * c){
         [globalView.layer insertSublayer:label atIndex:0];
         [globalView.layer insertSublayer:gradient atIndex:0];
 
-
         [self addSubview:globalView];
         [label release];
         [globalView release];
     }
+    NSLog(@"releasing color");
+    [color release];
+    [textStyle release];
+    NSLog(@"released");
+    color = nil;
+    textStyle = nil;
+    NSLog(@"All are nil");
 }
 
 @end
